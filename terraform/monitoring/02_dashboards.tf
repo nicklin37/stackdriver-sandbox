@@ -115,3 +115,10 @@ resource "google_monitoring_dashboard" "userexp_dashboard" {
 }
 EOF
 }
+
+# This resource creates dashboards for the frontend service of the
+# Stackdriver Sandbox. The JSON object containing the exact details
+# of the dashboard can be found in the 'dashboards' folder.
+resource "google_monitoring_dashboard" "frontend_dashboard" {
+	dashboard_json = file("./dashboards/frontend_dashboard.json")
+}

@@ -106,6 +106,17 @@ class TestMonitoringDashboard(unittest.TestCase):
 				
 		self.assertTrue(found_userexp_dashboard)
 
+  def testFrontendServiceDashboard(self):
+    """ Test that the Frontend Service Dashboard gets created. """
+    client = v1.DasboardsServiceClient()
+    dashboards = client.list_dashboards(project_name)
+    found_frontend_dashboard = False
+    for dashboard in dashboards:
+      if dashboard.display_name == 'Frontend Service Dashboard':
+        found_frontend_dashboard = True
+
+    self.assertTrue(found_frontend_dashboard)
+
 if __name__ == '__main__':
 	project_name = project_name + getProjectId()
 	unittest.main()
