@@ -101,3 +101,83 @@ resource "google_monitoring_slo" "frontend_latency_slo" {
     }
   }
 }
+
+# Create SLOs for the cartservice using the automatically detected Istio service
+#
+# Create an SLO for availablity for the cartservice.
+# The SLO is defined as following: 
+#   99% of all non-4XX requests within the past 30 day windowed period
+#   return with 200 OK status
+resource "google_monitoring_slo" "cartservice_availability_slo" {
+  # Uses the Istio service that is automatically detected and created by installing Istio
+  # Identify the service using the string: ist:${project_id}-zone-${zone}-stackdriver-sandbox-default-${service_name}
+  service = "ist:${var.project_id}-zone-${var.zone}-stackdriver-sandbox-default-cartservice"
+  slo_id = "availability-slo"
+  display_name = "Availability SLO with request base SLI (good total ratio)"
+
+  # The goal sets our 99% objective with a 30 day rolling window period
+  goal = 0.99
+  rolling_period_days = 30
+
+  request_based_sli {
+    good_total_ratio {
+
+      # The "good" service is the number of 200 OK responses
+      good_service_filter = join(" AND ", [
+        "metric.type=\"istio.io/service/server/request_count\"",
+        "resource.type=\"k8s_container\"",
+        "resource.label.\"cluster_name\"=\"stackdriver-sandbox\"",
+        "metadata.user_labels.\"app\"=\"cartservice\"",
+        "metric.label.\"response_code\"=\"200\""
+      ])
+
+      # The total is the number of non-4XX responses
+      # We elimiate 4XX responses since they do not accurately represent server-side 
+      # failures and have the possibility of skewing our SLO measurements
+      total_service_filter = join(" AND ", [
+        "metric.type=\"istio.io/service/server/request_count\"",
+        "resource.type=\"k8s_container\"",
+        "resource.label.\"cluster_name\"=\"stackdriver-sandbox\"",
+        "metadata.user_labels.\"app\"=\"cartservice\"",
+        join(" OR ", ["metric.label.\"response_code\"<\"400\"",
+          "metric.label.\"response_code\">=\"500\""])
+      ])
+      
+    }
+  }
+}
+
+# Create an SLO on the cartservice with respect to latency using the Istio service.
+# Our SLO is defined as following:
+#   99% of requests that return 200 OK responses return in under 500 ms
+resource "google_monitoring_slo" "cartservice_latency_slo" {
+  service = "ist:${var.project_id}-zone-${var.zone}-stackdriver-sandbox-default-cartservice"
+  slo_id = "latency-slo"
+  display_name = "Latency SLO with request base SLI (distribution cut)"
+
+  # Again, set our goal of 99% with a 30 day rolling window period.
+  goal = 0.99
+  rolling_period_days = 30
+
+  request_based_sli {
+    distribution_cut {
+
+      # The distribution filter retrieves latencies of requests that returned 200 OK responses
+      distribution_filter = join(" AND ", [
+        "metric.type=\"istio.io/service/server/response_latencies\"",
+        "resource.type=\"k8s_container\"",
+        "resource.label.\"cluster_name\"=\"stackdriver-sandbox\"",
+        "metric.label.\"response_code\"=\"200\"",
+        "metadata.user_labels.\"app\"=\"cartservice\""
+      ])
+
+      range {
+
+        # By not setting a min value, it is automatically set to -infinity
+        # The upper bound for latency is 500 ms
+        max = 500
+
+      }
+    }
+  }
+}
