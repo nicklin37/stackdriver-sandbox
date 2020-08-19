@@ -31,3 +31,9 @@ variable "bucket_name" {
   type        = string
   description = "The name of your bucket to store the state file. Case-sensitive."
 }
+
+variable "skip_workspace_prompt" {
+  type        = string
+  default     = ""
+  description = "Whether to skip the Cloud Monitoring Workspace creation prompt."
+}
