@@ -36,7 +36,7 @@ def findService(client, service_name, project_id, zone, should_timeout):
 	full_service_name = getIstioServiceName(service_name, project_id, zone)
 	service = client.service_path(project_id, full_service_name)
 	num_tries = 0
-	while not found_service and (should_timeout and num_tries <= 50):
+	while not found_service and (should_timeout and num_tries <= 60):
 		try:
 			found_service = client.get_service(service)
 		except: # possible exceptions include GoogleAPICallError and ValueError
