@@ -36,7 +36,6 @@ resource "null_resource" "detect_istio_services" {
 
 data "external" "monitoring_vars" {
   program = ["/bin/bash", "${path.module}/monitoring/get_monitoring_vars.sh"]
-  
 }
 
 module "monitoring" {

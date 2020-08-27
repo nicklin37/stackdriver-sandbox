@@ -37,3 +37,9 @@ variable "skip_workspace_prompt" {
   default     = ""
   description = "Whether to skip the Cloud Monitoring Workspace creation prompt."
 }
+
+variable "service_wait" {
+  type        = string
+  default     = ""
+  description = "Whether to wait indefinitely for Istio services to appear."
+}
