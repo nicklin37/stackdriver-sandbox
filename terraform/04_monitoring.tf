@@ -12,14 +12,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-resource "null_resource" "workspace_prompt" {
-  provisioner "local-exec" {
-    interpreter = ["/bin/bash", "-c"]
-    command = "./workspace_prompt.sh -p ${var.project_id}"
-  }
+#resource "null_resource" "workspace_prompt" {
+  #provisioner "local-exec" {
+    #interpreter = ["/bin/bash", "-c"]
+    #command = "${path.module}/workspace_prompt.sh -p ${var.project_id}"
+  #}
 
+  #triggers = {
+    #build_number = "${timestamp()}"
+  #}
+  # depends_on = [null_resource.delay]
+#}
+
+resource "null_resource" "detect_istio_services" {
+  provisioner "local-exec" {
+    command = "python3 ${path.module}/monitoring/istio_service_setup.py linnicholas-starter-1 us-central1-b"
+  }
   triggers = {
     build_number = "${timestamp()}"
   }
   # depends_on = [null_resource.delay]
+}
+
+data "external" "monitoring_vars" {
+  program = ["/bin/bash", "${path.module}/monitoring/get_monitoring_vars.sh"]
+  
+}
+
+module "monitoring" {
+  source = "./monitoring"
+
+  external_ip = data.external.monitoring_vars.result.external_ip
+  project_id = "linnicholas-starter-1"
+  project_owner_email = data.external.monitoring_vars.result.email
+  zone = "us-central1-b"
+
+  depends_on = [null_resource.detect_istio_services]
+
 }
