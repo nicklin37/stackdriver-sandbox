@@ -87,7 +87,6 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-
 	if err := templates.ExecuteTemplate(w, "home", map[string]interface{}{
 		"session_id":    sessionID(r),
 		"request_id":    r.Context().Value(ctxKeyRequestID{}),
