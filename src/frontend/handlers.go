@@ -40,6 +40,7 @@ var (
 )
 
 func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
+	
 	log := r.Context().Value(ctxKeyLog{}).(logrus.FieldLogger)
 	log.WithField("currency", currentCurrency(r)).Info("home")
 	currencies, err := fe.getCurrencies(r.Context())
@@ -70,6 +71,21 @@ func (fe *frontendServer) homeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ps[i] = productView{p, price}
+	}
+
+	if os.Getenv("SRE_RECIPE_1") == "Active" {
+		//increase latency by mapping all products to currencies 100 times, each iteration taking 100 ms
+		for i := 0 ; i < 100; i++ { 
+			for _, p := range products {
+				for _, c := range currencies {
+					_, err := fe.convertCurrency(r.Context(), p.GetPriceUsd(), c)
+					if err != nil {
+						log.Error("Failed converting product to all latencies.")
+						return
+					}
+				}
+			}
+		}
 	}
 
 	if err := templates.ExecuteTemplate(w, "home", map[string]interface{}{
@@ -129,6 +145,9 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		Item  *pb.Product
 		Price *pb.Money
 	}{p, price}
+
+	// [SRE Recipes] Increase latency by calling the currency service over and over
+
 
 	if err := templates.ExecuteTemplate(w, "product", map[string]interface{}{
 		"session_id":      sessionID(r),
