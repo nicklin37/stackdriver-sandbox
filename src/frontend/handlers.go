@@ -146,9 +146,6 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		Price *pb.Money
 	}{p, price}
 
-	// [SRE Recipes] Increase latency by calling the currency service over and over
-
-
 	if err := templates.ExecuteTemplate(w, "product", map[string]interface{}{
 		"session_id":      sessionID(r),
 		"request_id":      r.Context().Value(ctxKeyRequestID{}),
