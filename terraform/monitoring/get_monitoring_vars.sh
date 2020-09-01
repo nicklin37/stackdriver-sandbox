@@ -22,6 +22,10 @@ while [[ -z $external_ip && "${TRIES}" -lt 20 ]]; do
     TRIES=$((TRIES + 1))
 done;
 
+if [[ -z $external_ip ]]; then
+    echo "Error: No external IP address found."
+fi
+
 # Retrieve account email
 acct=$(gcloud info --format="value(config.account)")
 
