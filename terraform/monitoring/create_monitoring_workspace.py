@@ -4,6 +4,7 @@ import sys
 
 
 project_id = ''
+key = ''
 
 class WorkspaceSpider(scrapy.Spider):
     name = "workspace_spider"
@@ -11,7 +12,7 @@ class WorkspaceSpider(scrapy.Spider):
 
     def start_requests(self):
       print(project_id)
-      return [scrapy.FormRequest(self.start_url.format(project_id), callback=self.parse)]
+      return [scrapy.FormRequest(self.start_url.format(project_id), headers={'Authorization': 'Bearer {}'.format(key)}, callback=self.parse)]
 
     def parse(self, response):
       # here you would extract links to follow and return Requests for
@@ -27,6 +28,7 @@ class WorkspaceSpider(scrapy.Spider):
 if __name__ == '__main__':
   try:
     project_id = sys.argv[1]
+    key = sys.argv[2]
   except IndexError:
     exit("Missing project ID. Usage: python3 create_monitoring_workspace.py $project_id")
 
